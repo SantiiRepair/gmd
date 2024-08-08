@@ -2,11 +2,9 @@ package main
 
 import (
 	"errors"
-	"io"
 	"math/rand"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 
 	"gopkg.in/telebot.v3/react"
@@ -66,36 +64,4 @@ func getEmojiFor(s string) react.Reaction {
 	emoji.Type = "emoji"
 
 	return emoji
-}
-
-func detectMimeType(s string) (string, error) {
-	var buffer []byte
-
-	if isURL(s) {
-		resp, err := http.Get(s)
-		if err != nil {
-			return "", err
-		}
-		defer resp.Body.Close()
-
-		buffer, err = io.ReadAll(resp.Body)
-		if err != nil {
-			return "", err
-		}
-	} else {
-		file, err := os.Open(s)
-		if err != nil {
-			return "", err
-		}
-		defer file.Close()
-
-		buffer = make([]byte, 512)
-		_, err = file.Read(buffer)
-		if err != nil {
-			return "", err
-		}
-	}
-
-	mimeType := http.DetectContentType(buffer)
-	return mimeType, nil
 }
