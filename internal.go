@@ -36,7 +36,7 @@ func getMediaSource(s string) (string, error) {
 }
 
 func getMetadata(s string) (MediaURLs, error) {
-	cmd := exec.Command("yt-dlp", "-f", "b", "-j", "--skip-download", s)
+	cmd := exec.Command("yt-dlp", "-f", "bestvideo+bestaudio[ext=m4a]/best", "-j", "--skip-download", s)
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
