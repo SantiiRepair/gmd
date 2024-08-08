@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
-	"os/exec"
+	"os"
 	"strings"
 
 	"gopkg.in/telebot.v3/react"
@@ -69,26 +69,31 @@ func getEmojiFor(s string) react.Reaction {
 }
 
 func detectMimeType(s string) (string, error) {
-	cmd := exec.Command("ffmpeg", "-i", s, "-c:v", "copy", "-c:a", "aac", "-f", "matroska", "pipe:1")
+	var buffer []byte
 
-	r, err := cmd.StdoutPipe()
-	if err != nil {
-		return "", err
-	}
+	if isURL(s) {
+		resp, err := http.Get(s)
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
 
-	if err := cmd.Start(); err != nil {
-		return "", err
-	}
+		buffer, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		file, err := os.Open(s)
+		if err != nil {
+			return "", err
+		}
+		defer file.Close()
 
-	go func() {
-		cmd.Wait()
-		r.Close()
-	}()
-
-	buffer := make([]byte, 512)
-	_, err = r.Read(buffer)
-	if err != nil && err != io.EOF {
-		return "", err
+		buffer = make([]byte, 512)
+		_, err = file.Read(buffer)
+		if err != nil {
+			return "", err
+		}
 	}
 
 	mimeType := http.DetectContentType(buffer)

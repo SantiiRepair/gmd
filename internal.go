@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"io"
 	"os/exec"
@@ -18,9 +17,6 @@ func getMediaSource(s string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	fmt.Println(meta.AudioURL)
-	fmt.Println(meta.VideoURL)
 
 	if meta.VideoURL != "" {
 		ok, err := hasAudio(meta.VideoURL)
