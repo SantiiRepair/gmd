@@ -8,7 +8,7 @@ I noticed that several bots on telegram add ads every time they send the video, 
 
 ```sh
 sudo apt update
-sudo apt install -y libssl-dev zlib1g-dev g++
+sudo apt install -y libssl-dev zlib1g-dev gperf g++
 sudo apt install -y software-properties-common
 sudo add-apt-repository -y ppa:kitware/release
 sudo apt install -y cmake
