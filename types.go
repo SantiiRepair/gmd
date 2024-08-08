@@ -2,6 +2,7 @@ package main
 
 type BotConfig struct {
 	BotToken string
+	BotAPI string
 }
 
 type MediaInfo struct {

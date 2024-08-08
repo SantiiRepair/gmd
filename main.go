@@ -5,7 +5,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	tele "gopkg.in/telebot.v3"
@@ -28,6 +27,7 @@ func init() {
 
 func main() {
 	bot, err := tele.NewBot(tele.Settings{
+		URL:    botConfig().BotAPI,
 		Token:  botConfig().BotToken,
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
 	})
@@ -44,19 +44,7 @@ func main() {
 			go c.Bot().React(c.Recipient(), c.Message(), react.React(emoji))
 			media, err := getMediaSource(s)
 			if errors.Is(err, nil) {
-				mime, err := detectMimeType(media)
-				if errors.Is(err, nil) {
-					if strings.Contains(mime, "video") {
-						v := &tele.Video{File: tele.FromDisk(media)}
-						return c.SendAlbum(tele.Album{v})
-					}
-
-					if strings.Contains(mime, "audio") {
-						a := &tele.Video{File: tele.FromDisk(media)}
-						return c.SendAlbum(tele.Album{a})
-					}
-				}
-
+				return c.SendAlbum(tele.Album{media})
 			}
 		}
 

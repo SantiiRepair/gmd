@@ -16,9 +16,11 @@ func init() {
 
 func botConfig() *BotConfig {
 
+	botApi := os.Getenv("BOT_API")
 	botToken := os.Getenv("BOT_TOKEN")
 
 	return &BotConfig{
+		BotAPI:   botApi,
 		BotToken: botToken,
 	}
 }
