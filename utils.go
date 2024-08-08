@@ -2,9 +2,11 @@ package main
 
 import (
 	"errors"
+	"io"
 	"math/rand"
 	"net/http"
 	"net/url"
+	"os/exec"
 	"strings"
 
 	"gopkg.in/telebot.v3/react"
@@ -30,14 +32,24 @@ func urlExists(url string) bool {
 	return resp.StatusCode == http.StatusOK
 }
 
+func hostname(s string) string {
+	parts := strings.Split(s, ".")
+	if len(parts) >= 2 {
+		return parts[len(parts)-2]
+	}
+
+	return ""
+}
+
 func getEmojiFor(s string) react.Reaction {
 	var emoji react.Reaction
 	parsedUrl, err := url.Parse(s)
 	if errors.Is(err, nil) {
-		for _, item := range sources {
-			urls := strings.Split(sources[item], "\n")
+		for _, data := range sources {
+			urls := strings.Split(data, "\n")
 			for _, u := range urls {
-				if strings.Contains(u, parsedUrl.Hostname()) {
+				url := hostname(parsedUrl.Hostname())
+				if url == hostname(u) {
 					emoji = react.EvilFace
 					break
 				}
@@ -54,4 +66,31 @@ func getEmojiFor(s string) react.Reaction {
 	emoji.Type = "emoji"
 
 	return emoji
+}
+
+func detectMimeType(s string) (string, error) {
+	cmd := exec.Command("ffmpeg", "-i", s, "-c:v", "copy", "-c:a", "aac", "-f", "matroska", "pipe:1")
+
+	r, err := cmd.StdoutPipe()
+	if err != nil {
+		return "", err
+	}
+
+	if err := cmd.Start(); err != nil {
+		return "", err
+	}
+
+	go func() {
+		cmd.Wait()
+		r.Close()
+	}()
+
+	buffer := make([]byte, 512)
+	_, err = r.Read(buffer)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+
+	mimeType := http.DetectContentType(buffer)
+	return mimeType, nil
 }

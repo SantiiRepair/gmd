@@ -2,10 +2,10 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	tele "gopkg.in/telebot.v3"
@@ -20,7 +20,6 @@ func init() {
 			body, err := io.ReadAll(resp.Body)
 			if errors.Is(err, nil) {
 				sources[url] = string(body)
-				fmt.Println(string(body))
 			}
 		}
 	}
@@ -39,10 +38,26 @@ func main() {
 	}
 
 	bot.Handle(tele.OnText, func(c tele.Context) error {
-		url := c.Text()
-		if isURL(url) && urlExists(url) {
-			emoji := getEmojiFor(url)
+		s := c.Text()
+		if isURL(s) && urlExists(s) {
+			emoji := getEmojiFor(s)
 			go c.Bot().React(c.Recipient(), c.Message(), react.React(emoji))
+			media, err := getMediaSource(s)
+			if errors.Is(err, nil) {
+				mime, err := detectMimeType(media)
+				if errors.Is(err, nil) {
+					if strings.Contains(mime, "video") {
+						v := &tele.Video{File: tele.FromURL(media)}
+						return c.SendAlbum(tele.Album{v})
+					}
+
+					if strings.Contains(mime, "audio") {
+						a := &tele.Video{File: tele.FromURL(media)}
+						return c.SendAlbum(tele.Album{a})
+					}
+				}
+
+			}
 		}
 
 		return nil
