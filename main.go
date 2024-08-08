@@ -47,12 +47,12 @@ func main() {
 				mime, err := detectMimeType(media)
 				if errors.Is(err, nil) {
 					if strings.Contains(mime, "video") {
-						v := &tele.Video{File: tele.FromURL(media)}
+						v := &tele.Video{File: tele.FromDisk(media)}
 						return c.SendAlbum(tele.Album{v})
 					}
 
 					if strings.Contains(mime, "audio") {
-						a := &tele.Video{File: tele.FromURL(media)}
+						a := &tele.Video{File: tele.FromDisk(media)}
 						return c.SendAlbum(tele.Album{a})
 					}
 				}
