@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	tele "gopkg.in/telebot.v3"
@@ -30,7 +29,7 @@ func init() {
 
 func main() {
 	bot, err := tele.NewBot(tele.Settings{
-		Token:  os.Getenv("BOT_TOKEN"),
+		Token:  botConfig().BotToken,
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
 	})
 
