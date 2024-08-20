@@ -63,8 +63,6 @@ func main() {
 			if errors.Is(err, nil) {
 				return c.SendAlbum(tele.Album{media})
 			}
-
-			fmt.Println(err.Error())
 		}
 
 		return nil

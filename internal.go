@@ -75,12 +75,13 @@ func downloadMedia(url string, mediaInfo MediaInfo, fileId string) (string, erro
 
 // createTelegramMedia creates a Telegram media object based on the media type.
 func createTelegramMedia(mediaInfo MediaInfo, output string) (tele.Inputtable, error) {
-	if strings.Contains(mediaInfo.Format, "video") {
+	mediaType := whichFormat(mediaInfo.Format)
+	if mediaType == Video {
 		return &tele.Video{
 			File:      tele.FromDisk(output),
 			Thumbnail: &tele.Photo{File: tele.FromURL(mediaInfo.Thumbnail)},
 		}, nil
-	} else if strings.Contains(mediaInfo.Format, "audio") {
+	} else if mediaType == Audio {
 		return &tele.Audio{
 			File: tele.FromDisk(output),
 		}, nil

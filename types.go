@@ -1,5 +1,12 @@
 package main
 
+const (
+	_ int = iota
+	Video
+	Audio
+	Unknown
+)
+
 type BotConfig struct {
 	BotToken string
 	BotAPI   string

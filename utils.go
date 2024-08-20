@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"gopkg.in/telebot.v3/react"
@@ -20,7 +21,7 @@ func isURL(s string) bool {
 }
 
 func urlExists(url string) bool {
-	resp, err := http.Head(url)
+	resp, err := http.Get(url)
 	if err != nil {
 		return false
 	}
@@ -30,7 +31,7 @@ func urlExists(url string) bool {
 	return resp.StatusCode == http.StatusOK
 }
 
-func hostname(s string) string {
+func hostnameOf(s string) string {
 	parts := strings.Split(s, ".")
 	if len(parts) >= 2 {
 		return parts[len(parts)-2]
@@ -53,6 +54,19 @@ func reverseSlice(s interface{}) interface{} {
 	return reversed.Interface()
 }
 
+func whichFormat(f string) int {
+	vPattern := regexp.MustCompile(`\d{3,4}x\d{3,4}`)
+	if vPattern.MatchString(f) || strings.Contains(f, "video") {
+		return Video
+	}
+
+	if strings.Contains(f, "audio") {
+		return Audio
+	}
+
+	return Unknown
+}
+
 // getEmojiFor returns an emoji based on the provided URL string.
 func getEmojiFor(s string) react.Reaction {
 	parsedUrl, err := url.Parse(s)
@@ -63,7 +77,8 @@ func getEmojiFor(s string) react.Reaction {
 	for _, data := range sources {
 		urls := strings.Split(data, "\n")
 		for _, u := range urls {
-			if hostname(parsedUrl.Hostname()) == hostname(u) {
+			mn := parsedUrl.Hostname()
+			if hostnameOf(mn) == hostnameOf(u) {
 				return react.EvilFace
 			}
 		}
