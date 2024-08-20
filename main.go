@@ -55,14 +55,27 @@ func main() {
 	}
 
 	bot.Handle(tele.OnText, func(c tele.Context) error {
-		s := c.Text()
-		if isURL(s) && urlExists(s) {
-			emoji := getEmojiFor(s)
-			go c.Bot().React(c.Recipient(), c.Message(), react.React(emoji))
-			media, err := getMediaSource(s)
-			if errors.Is(err, nil) {
-				return c.SendAlbum(tele.Album{media})
+		messageText := c.Text()
+
+		if isURL(messageText) && urlExists(messageText) {
+			emoji := getEmojiFor(messageText)
+
+			errChan := make(chan error)
+
+			go func() {
+				errChan <- c.Bot().React(c.Recipient(), c.Message(), react.React(emoji))
+			}()
+
+			if err := <-errChan; err != nil {
+				return fmt.Errorf("error reacting to message: %w", err)
 			}
+
+			media, err := getMediaSource(messageText)
+			if err != nil {
+				return fmt.Errorf("error getting media source: %w", err)
+			}
+
+			return c.SendAlbum(tele.Album{media})
 		}
 
 		return nil

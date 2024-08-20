@@ -14,9 +14,13 @@ type BotConfig struct {
 
 type MediaInfo struct {
 	Title     string   `json:"title"`
+	Filename  string   `json:"filename"`
+	Duration  float64  `json:"duration"`
 	Thumbnail string   `json:"thumbnail"`
 	Formats   []Format `json:"formats"`
 	Format    string   `json:"format"`
+	Width     int      `json:"width"`
+	Height    int      `json:"height"`
 	Ext       string   `json:"ext"`
 }
 

@@ -79,11 +79,17 @@ func createTelegramMedia(mediaInfo MediaInfo, output string) (tele.Inputtable, e
 	if mediaType == Video {
 		return &tele.Video{
 			File:      tele.FromDisk(output),
+			FileName:  mediaInfo.Filename,
+			Width:     mediaInfo.Width,
+			Height:    mediaInfo.Height,
+			Duration:  int(mediaInfo.Duration),
 			Thumbnail: &tele.Photo{File: tele.FromURL(mediaInfo.Thumbnail)},
 		}, nil
 	} else if mediaType == Audio {
 		return &tele.Audio{
-			File: tele.FromDisk(output),
+			File:     tele.FromDisk(output),
+			Title:    mediaInfo.Title,
+			FileName: mediaInfo.Filename,
 		}, nil
 	}
 
