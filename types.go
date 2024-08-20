@@ -6,10 +6,16 @@ type BotConfig struct {
 }
 
 type MediaInfo struct {
-	Title   string `json:"title"`
-	Formats []struct {
-		Ext    string `json:"ext"`
-		Acodec string `json:"acodec"`
-		Vcodec string `json:"vcodec"`
-	} `json:"formats"`
+	Title     string   `json:"title"`
+	Thumbnail string   `json:"thumbnail"`
+	Formats   []Format `json:"formats"`
+	Format    string   `json:"format"`
+	Ext       string   `json:"ext"`
+}
+
+type Format struct {
+	Ext      string `json:"ext"`
+	FormatId string `json:"format_id"`
+	Acodec   string `json:"acodec"`
+	Vcodec   string `json:"vcodec"`
 }

@@ -2,9 +2,12 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	tele "gopkg.in/telebot.v3"
@@ -12,6 +15,17 @@ import (
 )
 
 func init() {
+	var err error
+	this, err = os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	tempDir = filepath.Join(this, "temp")
+	if err := os.MkdirAll(tempDir, os.ModePerm); err != nil {
+		panic(err)
+	}
+
 	for _, url := range []string{pornBlackList} {
 		resp, err := http.Get(url)
 		if errors.Is(err, nil) {
@@ -30,6 +44,9 @@ func main() {
 		URL:    botConfig().BotAPI,
 		Token:  botConfig().BotToken,
 		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
+		OnError: func(err error, ctx tele.Context) {
+			fmt.Println(err.Error())
+		},
 	})
 
 	if err != nil {
@@ -46,6 +63,8 @@ func main() {
 			if errors.Is(err, nil) {
 				return c.SendAlbum(tele.Album{media})
 			}
+
+			fmt.Println(err.Error())
 		}
 
 		return nil

@@ -2,9 +2,9 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
-	"net/http"
-	"os"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -14,39 +14,77 @@ import (
 	"os/exec"
 )
 
-var sources = map[string]string{}
-
+// getMediaSource retrieves media from the given URL and returns a Telegram inputtable object.
 func getMediaSource(url string) (tele.Inputtable, error) {
-	this, err := os.Getwd()
+	fileId := uuid.New().String()
+
+	mediaInfo, err := fetchMediaInfo(url)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch media info: %w", err)
 	}
 
-	UUID := uuid.New().String()
-	mediaFilePath := filepath.Join(this, "temp", UUID+".mp4")
-	downloadCmd := exec.Command("yt-dlp", "--merge-output-format", "mp4", "-f", "bestvideo+bestaudio[ext=m4a]/best", "-o", mediaFilePath, url)
-
-	var downloadOut bytes.Buffer
-	downloadCmd.Stdout = &downloadOut
-	downloadCmd.Stderr = &downloadOut
-
-	if err := downloadCmd.Run(); err != nil {
-		return nil, err
-	}
-
-	fileContent, err := os.ReadFile(mediaFilePath)
+	output, err := downloadMedia(url, mediaInfo, fileId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to download media: %w", err)
 	}
 
-	contentType := http.DetectContentType(fileContent)
-	if strings.Contains(contentType, "video") {
-		v := &tele.Video{File: tele.FromDisk(mediaFilePath)}
-		return v, nil
-	} else if strings.Contains(contentType, "audio") {
-		a := &tele.Audio{File: tele.FromDisk(mediaFilePath)}
-		return a, nil
-	} else {
-		return nil, errors.New("")
+	return createTelegramMedia(mediaInfo, output)
+}
+
+// fetchMediaInfo retrieves media information using yt-dlp.
+func fetchMediaInfo(url string) (MediaInfo, error) {
+	formatCmd := exec.Command("yt-dlp", "--get-format", "-j", url)
+	var formatOut bytes.Buffer
+	formatCmd.Stdout = &formatOut
+	formatCmd.Stderr = &formatOut
+
+	if err := formatCmd.Run(); err != nil {
+		return MediaInfo{}, err
 	}
+
+	result := formatOut.String()
+	lines := strings.Split(result, "\n")
+	if len(lines) > 1 {
+		result = strings.Join(lines[1:], "\n")
+	}
+
+	var mediaInfo MediaInfo
+	if err := json.Unmarshal([]byte(result), &mediaInfo); err != nil {
+		return MediaInfo{}, fmt.Errorf("failed to unmarshal media info: %w", err)
+	}
+
+	return mediaInfo, nil
+}
+
+// downloadMedia downloads the media file based on the provided media information.
+func downloadMedia(url string, mediaInfo MediaInfo, fileId string) (string, error) {
+	formats := reverseSlice(mediaInfo.Formats)
+	bestFormat := formats.([]Format)[0]
+	formatId := bestFormat.FormatId
+
+	fileName := fmt.Sprintf("%s.%s", fileId, mediaInfo.Ext)
+	output := filepath.Join(tempDir, fileName)
+
+	cmd := exec.Command("yt-dlp", "-f", formatId, "--no-overwrites", "-o", output, url)
+	if err := cmd.Run(); err != nil {
+		return "", err
+	}
+
+	return output, nil
+}
+
+// createTelegramMedia creates a Telegram media object based on the media type.
+func createTelegramMedia(mediaInfo MediaInfo, output string) (tele.Inputtable, error) {
+	if strings.Contains(mediaInfo.Format, "video") {
+		return &tele.Video{
+			File:      tele.FromDisk(output),
+			Thumbnail: &tele.Photo{File: tele.FromURL(mediaInfo.Thumbnail)},
+		}, nil
+	} else if strings.Contains(mediaInfo.Format, "audio") {
+		return &tele.Audio{
+			File: tele.FromDisk(output),
+		}, nil
+	}
+
+	return nil, errors.New("could not determine content type")
 }
