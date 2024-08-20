@@ -4,6 +4,7 @@ var (
 	this    string
 	tempDir string
 	sources = make(map[string]string)
+	tools   = []string{"yt-dlp", "ffmpeg"}
 )
 
 const (
