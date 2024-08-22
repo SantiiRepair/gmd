@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"path/filepath"
 
 	"github.com/google/uuid"
@@ -61,7 +62,7 @@ func downloadMedia(url string, mediaInfo MediaInfo, fileId string) (string, erro
 	fileName := fmt.Sprintf("%s.%s", fileId, mediaInfo.Ext)
 	output := filepath.Join(tempDir, fileName)
 
-	cmd := exec.Command("yt-dlp", "-f", "bestvideo+bestaudio", "-o", output, url)
+	cmd := exec.Command("yt-dlp", "-f", "bestvideo+bestaudio/best", "-o", output, url)
 	if err := cmd.Run(); err != nil {
 		return "", err
 	}
@@ -78,7 +79,7 @@ func createTelegramMedia(mediaInfo MediaInfo, output string) (tele.Inputtable, e
 			FileName: mediaInfo.Filename,
 			Width:    mediaInfo.Width,
 			Height:   mediaInfo.Height,
-			Duration: int(mediaInfo.Duration),
+			Duration: int(math.Round(mediaInfo.Duration)),
 		}
 
 		thumbnail, err := mediaInfo.GetThumbnail()

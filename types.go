@@ -50,13 +50,13 @@ func (m *MediaInfo) GetThumbnail() (string, error) {
 	thumbId := uuid.New().String()
 
 	filename := fmt.Sprintf(tempDir, "%s.jpg", thumbId)
-	thumbnailPath := filepath.Join(tempDir, filename) 
+	thumbnailPath := filepath.Join(tempDir, filename)
 
 	resp, err := http.Get(m.Thumbnail)
 	if err != nil {
 		return "", err
 	}
-	
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
