@@ -3,11 +3,11 @@ package main
 import (
 	"os"
 
-	"github.com/joho/godotenv"
+	env "github.com/joho/godotenv"
 )
 
 func init() {
-	err := godotenv.Load(".env")
+	err := env.Load(".env")
 	if err != nil {
 		panic(err)
 	}
